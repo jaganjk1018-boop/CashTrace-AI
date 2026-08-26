@@ -75,12 +75,12 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600, onNo
       .call(
         d3
           .drag<any, any>()
-          .on("start", (event, d) => {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
+          .on("start", (_, d) => {
             d.fx = d.x;
             d.fy = d.y;
           })
           .on("drag", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = event.x;
             d.fy = event.y;
           })
@@ -165,9 +165,8 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600, onNo
   return (
     <svg
       ref={svgRef}
-      width={width}
-      height={height}
-      className="bg-command-bg rounded-xl border border-command-border w-full"
+      viewBox={`0 0 ${width} ${height}`}
+      className="bg-command-bg rounded-xl border border-command-border w-full h-[550px]"
     />
   );
 }
