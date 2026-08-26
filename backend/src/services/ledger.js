@@ -97,6 +97,7 @@ export async function verifyChain(case_id) {
       id: row.id,
       action_type: row.action_type,
       officer_id: row.officer_id,
+      payload: row.payload,
       created_at: row.created_at,
       valid: prevHashMatches && hashMatches,
       stored_hash: row.curr_hash,
