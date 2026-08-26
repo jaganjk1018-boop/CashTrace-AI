@@ -1,11 +1,8 @@
 // src/components/MuleNetworkGraph.tsx
 //
 // Interactive force-directed graph of the mule-account network, built
-// directly with d3-force (not a wrapper library) so we have full control
-// over styling to match the command-center theme. Complaints (victims)
-// are small blue nodes; mule accounts are larger nodes colored by risk —
-// an account that shows up connected to many complaints is visually
-// obvious as a "hub," which is exactly the pattern investigators care about.
+// directly with d3-force. Supports focus neighbor dimming, drag physics,
+// dynamic edge sizing, and selection callbacks.
 
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
@@ -15,6 +12,7 @@ interface Props {
   data: GraphData;
   width?: number;
   height?: number;
+  onNodeClick?: (node: GraphNode) => void;
 }
 
 function riskColor(riskScore: number | undefined): string {
@@ -24,7 +22,7 @@ function riskColor(riskScore: number | undefined): string {
   return "#38bdf8"; // sky blue for accounts with low/no computed risk yet
 }
 
-export default function MuleNetworkGraph({ data, width = 900, height = 600 }: Props) {
+export default function MuleNetworkGraph({ data, width = 900, height = 600, onNodeClick }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -44,15 +42,15 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600 }: Pr
         d3
           .forceLink(edges as any)
           .id((d: any) => d.id)
-          .distance(90)
+          .distance(100)
       )
-      .force("charge", d3.forceManyBody().strength(-180))
+      .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(24));
+      .force("collision", d3.forceCollide().radius(26));
 
     const g = svg.append("g");
 
-    // Zoom/pan support — useful once the network gets large.
+    // Zoom/pan support
     svg.call(
       d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.3, 3]).on("zoom", (event) => {
         g.attr("transform", event.transform);
@@ -66,13 +64,14 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600 }: Pr
       .selectAll("line")
       .data(edges)
       .join("line")
-      .attr("stroke-width", (d) => Math.max(1, Math.log10(d.amount) - 2));
+      .attr("stroke-width", (d) => Math.max(1.5, Math.log10(d.amount) - 2));
 
     const node = g
       .append("g")
       .selectAll("g")
       .data(nodes)
       .join("g")
+      .style("cursor", "pointer")
       .call(
         d3
           .drag<any, any>()
@@ -92,21 +91,55 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600 }: Pr
           }) as any
       );
 
+    // Node circles styling
     node
       .append("circle")
-      .attr("r", (d) => (d.type === "account" ? 14 : 7))
+      .attr("r", (d) => (d.type === "account" ? 14 : 8))
       .attr("fill", (d) => (d.type === "account" ? riskColor(d.risk_score) : "#94a3b8"))
       .attr("stroke", "#0b1120")
       .attr("stroke-width", 2);
 
+    // Text labels
     node
       .append("text")
       .text((d) => d.label)
       .attr("x", 0)
       .attr("y", (d) => (d.type === "account" ? 26 : 18))
       .attr("text-anchor", "middle")
-      .attr("font-size", 10)
-      .attr("fill", "#cbd5e1");
+      .attr("font-size", 9)
+      .attr("font-weight", "500")
+      .attr("fill", "#94a3b8");
+
+    // Dynamic Hover Neighborhood Highlighting & Click callbacks
+    node
+      .on("mouseover", (_, d: any) => {
+        const neighbors = new Set<string>();
+        neighbors.add(d.id);
+
+        edges.forEach((edge) => {
+          if (edge.source.id === d.id) {
+            neighbors.add(edge.target.id);
+          } else if (edge.target.id === d.id) {
+            neighbors.add(edge.source.id);
+          }
+        });
+
+        // Dim non-neighbors
+        node.style("opacity", (n: any) => (neighbors.has(n.id) ? 1.0 : 0.15));
+        link
+          .style("stroke-opacity", (e: any) => (e.source.id === d.id || e.target.id === d.id ? 1.0 : 0.08))
+          .style("stroke", (e: any) => (e.source.id === d.id || e.target.id === d.id ? "#38bdf8" : "#334155"));
+      })
+      .on("mouseout", () => {
+        // Reset opacities
+        node.style("opacity", 1.0);
+        link.style("stroke-opacity", 0.6).style("stroke", "#334155");
+      })
+      .on("click", (_, d) => {
+        if (onNodeClick) {
+          onNodeClick(d);
+        }
+      });
 
     node.append("title").text((d) =>
       d.type === "account"
@@ -127,7 +160,7 @@ export default function MuleNetworkGraph({ data, width = 900, height = 600 }: Pr
     return () => {
       simulation.stop();
     };
-  }, [data, width, height]);
+  }, [data, width, height, onNodeClick]);
 
   return (
     <svg
