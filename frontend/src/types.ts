@@ -30,4 +30,8 @@ export interface Prediction {
   predicted_window_end: string; // ISO date
   is_expired: boolean;
   victim_location?: { lat: number; lng: number }; // Optional polyline coordinate
+  police_station_name?: string;
+  police_station_contact?: string;
+  police_location?: { lat: number; lng: number };
+  police_distance_km?: number;
 }

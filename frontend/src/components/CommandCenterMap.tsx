@@ -114,6 +114,48 @@ export default function CommandCenterMap({ predictions, selectedId }: Props) {
           />
         </>
       )}
+
+      {/* Render the nearest Police Intercept Station and Interception vector when a threat is selected */}
+      {selectedPrediction && selectedPrediction.police_location && (
+        <>
+          {/* Police Station Marker */}
+          <CircleMarker
+            center={[selectedPrediction.police_location.lat, selectedPrediction.police_location.lng]}
+            radius={9}
+            pathOptions={{
+              color: "#10b981", // emerald-500
+              fillColor: "#10b981",
+              fillOpacity: 0.95,
+              weight: 2
+            }}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong className="text-emerald-400 font-bold block mb-0.5">👮 Intercept Station Unit</strong>
+                <span className="text-slate-200 block mb-0.5">{selectedPrediction.police_station_name}</span>
+                <span className="text-slate-400 block mb-1">ATM Distance: {selectedPrediction.police_distance_km?.toFixed(2)} km</span>
+                <div className="pt-1.5 border-t border-slate-700/50">
+                  <span className="text-slate-300 block font-mono">Hotline: {selectedPrediction.police_station_contact}</span>
+                </div>
+              </div>
+            </Popup>
+          </CircleMarker>
+
+          {/* Intercept Line (ATM <-> Police Station) */}
+          <Polyline
+            positions={[
+              [selectedPrediction.location.lat, selectedPrediction.location.lng],
+              [selectedPrediction.police_location.lat, selectedPrediction.police_location.lng]
+            ]}
+            pathOptions={{
+              color: "#10b981",
+              weight: 2,
+              dashArray: "3, 6",
+              opacity: 0.85
+            }}
+          />
+        </>
+      )}
     </MapContainer>
   );
 }

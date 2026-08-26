@@ -52,6 +52,33 @@ export default function WhyPanel({ prediction }: Props) {
               </div>
             ))}
           </div>
+
+          {prediction.police_station_name && (
+            <div className="mt-4 pt-3.5 border-t border-command-border/50">
+              <h4 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <span>👮</span> NEAREST INTERCEPT CELL
+              </h4>
+              <div className="bg-command-bg/30 border border-command-border/30 rounded-lg p-2.5 space-y-1">
+                <div className="text-xs font-semibold text-slate-100">
+                  {prediction.police_station_name}
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-400">
+                  <span>Distance to ATM:</span>
+                  <span className="text-emerald-400 font-semibold">
+                    {prediction.police_distance_km?.toFixed(2)} km
+                  </span>
+                </div>
+                {prediction.police_station_contact && (
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>Direct Hotline:</span>
+                    <span className="text-slate-300 font-mono select-all">
+                      {prediction.police_station_contact}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -61,6 +61,22 @@ export async function computeActivePredictions(limit = 10) {
       FROM last_mule_activity lma
       JOIN withdrawal_points wp
         ON ST_DWithin(lma.victim_location, wp.location, ${RADIUS_METERS})
+    ),
+    nearest_police AS (
+      SELECT DISTINCT ON (wp.id)
+        wp.id AS withdrawal_point_id,
+        ps.name AS police_station_name,
+        ps.contact_number AS police_station_contact,
+        ST_Y(ps.location::geometry) AS police_lat,
+        ST_X(ps.location::geometry) AS police_lng,
+        ST_Distance(wp.location, ps.location) AS police_distance_meters
+      FROM withdrawal_points wp
+      CROSS JOIN LATERAL (
+        SELECT name, contact_number, location
+        FROM police_stations
+        ORDER BY location <-> wp.location
+        LIMIT 1
+      ) ps
     )
     SELECT
       a.id AS account_id,
@@ -79,11 +95,17 @@ export async function computeActivePredictions(limit = 10) {
       nw.wp_lat,
       nw.wp_lng,
       nw.distance_meters,
+      np.police_station_name,
+      np.police_station_contact,
+      np.police_lat,
+      np.police_lng,
+      np.police_distance_meters,
       EXTRACT(EPOCH FROM (now() - lma.last_txn_time)) / 3600.0 AS hours_since_last_txn
     FROM last_mule_activity lma
     JOIN accounts a ON a.account_number = lma.account_number
     JOIN txn_counts tc ON tc.account_number = lma.account_number
     LEFT JOIN nearest_withdrawal nw ON nw.account_number = lma.account_number AND nw.rn = 1
+    LEFT JOIN nearest_police np ON np.withdrawal_point_id = nw.withdrawal_point_id
     WHERE nw.withdrawal_point_id IS NOT NULL
     ORDER BY lma.last_txn_time DESC
     LIMIT 200;
@@ -156,6 +178,12 @@ export async function computeActivePredictions(limit = 10) {
       predicted_window_start: predictedWindowStart.toISOString(),
       predicted_window_end: predictedWindowEnd.toISOString(),
       is_expired: predictedWindowEnd.getTime() < Date.now(),
+      
+      // Nearest intercept police station details
+      police_station_name: row.police_station_name,
+      police_station_contact: row.police_station_contact,
+      police_location: row.police_lat ? { lat: Number(row.police_lat), lng: Number(row.police_lng) } : null,
+      police_distance_km: row.police_distance_meters ? Number(row.police_distance_meters) / 1000 : null,
     };
   });
 
