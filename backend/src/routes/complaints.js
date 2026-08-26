@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { pool } from "../db.js";
 import { geocodeAddress } from "../services/geocode.js";
 import { computeActivePredictions } from "../services/predictionEngine.js";
+import { sendAlerts } from "../services/notification.js";
 
 export default function createComplaintsRouter(io) {
   const router = express.Router();
@@ -105,11 +106,11 @@ export default function createComplaintsRouter(io) {
         // 3. Recompute predictions and broadcast new alert via Socket.IO
         const predictions = await computeActivePredictions(10);
         const specificPrediction = predictions.find(p => p.account_number === to_account);
+        const alertTarget = specificPrediction || (predictions.length > 0 ? predictions[0] : null);
         
-        if (specificPrediction) {
-          io.emit("new_prediction", specificPrediction);
-        } else if (predictions.length > 0) {
-          io.emit("new_prediction", predictions[0]);
+        if (alertTarget) {
+          sendAlerts(alertTarget);
+          io.emit("new_prediction", alertTarget);
         }
       }
 

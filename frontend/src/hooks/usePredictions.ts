@@ -15,6 +15,7 @@ let socket: Socket | null = null;
 export function usePredictions() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [connected, setConnected] = useState(false);
+  const [latestPrediction, setLatestPrediction] = useState<Prediction | null>(null);
 
   useEffect(() => {
     // Initial fetch so the map/list has data immediately.
@@ -34,7 +35,11 @@ export function usePredictions() {
     socket.on("new_prediction", (data: Prediction | Prediction[]) => {
       if (Array.isArray(data)) {
         setPredictions(data);
+        if (data.length > 0) {
+          setLatestPrediction(data[0]);
+        }
       } else {
+        setLatestPrediction(data);
         setPredictions((prev) => {
           // Avoid duplicate predictions for the same account
           const filtered = prev.filter((p) => p.account_number !== data.account_number);
@@ -60,5 +65,5 @@ export function usePredictions() {
     };
   }, []);
 
-  return { predictions, connected };
+  return { predictions, connected, latestPrediction };
 }
