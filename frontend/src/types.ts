@@ -34,4 +34,14 @@ export interface Prediction {
   police_station_contact?: string;
   police_location?: { lat: number; lng: number };
   police_distance_km?: number;
+
+  // Tactical dispatch and route analysis fields
+  patrol_vehicle_name?: string;
+  patrol_location?: { lat: number; lng: number };
+  patrol_distance_km?: number;
+  patrol_eta_mins?: number;
+  escape_corridor_name?: string;
+  escape_location?: { lat: number; lng: number };
+  roadblock_name?: string;
+  roadblock_location?: { lat: number; lng: number };
 }

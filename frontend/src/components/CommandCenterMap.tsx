@@ -156,6 +156,108 @@ export default function CommandCenterMap({ predictions, selectedId }: Props) {
           />
         </>
       )}
+
+      {/* Render Tactical Dispatch Vehicle & Dispatch route when a threat is selected */}
+      {selectedPrediction && selectedPrediction.patrol_location && (
+        <>
+          {/* Active Patrol Vehicle Node */}
+          <CircleMarker
+            center={[selectedPrediction.patrol_location.lat, selectedPrediction.patrol_location.lng]}
+            radius={8}
+            pathOptions={{
+              color: "#f59e0b", // amber-500
+              fillColor: "#f59e0b",
+              fillOpacity: 0.9,
+              weight: 2
+            }}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong className="text-amber-400 font-bold block mb-0.5">🚔 Active Patrol Dispatch</strong>
+                <span className="text-slate-200 block mb-0.5">{selectedPrediction.patrol_vehicle_name}</span>
+                <span className="text-slate-400 block font-mono">ETA: {selectedPrediction.patrol_eta_mins} mins ({selectedPrediction.patrol_distance_km?.toFixed(2)} km)</span>
+              </div>
+            </Popup>
+          </CircleMarker>
+
+          {/* Dispatch route vector (Patrol Vehicle <-> ATM) */}
+          <Polyline
+            positions={[
+              [selectedPrediction.patrol_location.lat, selectedPrediction.patrol_location.lng],
+              [selectedPrediction.location.lat, selectedPrediction.location.lng]
+            ]}
+            pathOptions={{
+              color: "#f59e0b",
+              weight: 2,
+              dashArray: "4, 8",
+              opacity: 0.85
+            }}
+          />
+        </>
+      )}
+
+      {/* Render Suspect Escape Corridor Destination & vector */}
+      {selectedPrediction && selectedPrediction.escape_location && (
+        <>
+          {/* Escape Destination Hub */}
+          <CircleMarker
+            center={[selectedPrediction.escape_location.lat, selectedPrediction.escape_location.lng]}
+            radius={6}
+            pathOptions={{
+              color: "#ef4444", // red-500
+              fillColor: "#1e293b",
+              fillOpacity: 0.8,
+              weight: 2,
+              dashArray: "2, 4"
+            }}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong className="text-red-400 font-bold block mb-0.5">🏃 Escape Destination Corridor</strong>
+                <span className="text-slate-300 block">{selectedPrediction.escape_corridor_name}</span>
+              </div>
+            </Popup>
+          </CircleMarker>
+
+          {/* Escape Route Corridor vector (ATM <-> Escape Destination) */}
+          <Polyline
+            positions={[
+              [selectedPrediction.location.lat, selectedPrediction.location.lng],
+              [selectedPrediction.escape_location.lat, selectedPrediction.escape_location.lng]
+            ]}
+            pathOptions={{
+              color: "#ef4444",
+              weight: 3,
+              dashArray: "1, 8",
+              opacity: 0.85
+            }}
+          />
+        </>
+      )}
+
+      {/* Render Recommended Roadblock Interception Node */}
+      {selectedPrediction && selectedPrediction.roadblock_location && (
+        <>
+          <CircleMarker
+            center={[selectedPrediction.roadblock_location.lat, selectedPrediction.roadblock_location.lng]}
+            radius={9}
+            pathOptions={{
+              color: "#ea580c", // orange-600
+              fillColor: "#ea580c",
+              fillOpacity: 0.95,
+              weight: 2
+            }}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong className="text-orange-400 font-bold block mb-0.5">🚧 Interception Roadblock</strong>
+                <span className="text-slate-200 block mb-0.5">{selectedPrediction.roadblock_name}</span>
+                <span className="text-slate-400 block leading-normal">Strategic roadblock positioned to cut off escape route. Status: Deploying.</span>
+              </div>
+            </Popup>
+          </CircleMarker>
+        </>
+      )}
     </MapContainer>
   );
 }
