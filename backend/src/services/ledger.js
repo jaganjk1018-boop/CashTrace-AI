@@ -9,25 +9,38 @@
 // action for that case. This creates a chain: if anyone edits an old
 // record's payload after the fact, its hash changes, which breaks the
 // chain for every record after it — instantly detectable.
-//
-// This is the same core idea as a blockchain's block-hash-linking,
-// simplified to a single append-only table instead of distributed nodes,
-// which is an honest and correct scope for what this application needs:
-// tamper-evidence for a legal audit trail, not decentralized consensus.
 
 import crypto from "crypto";
 import { pool } from "../db.js";
 
 const GENESIS_HASH = "0".repeat(64);
 
+// Recursively sort object keys alphabetically to guarantee deterministic
+// JSON stringification across JavaScript and PostgreSQL's JSONB serialization formats.
+function sortKeys(obj) {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortKeys);
+  }
+  const sorted = {};
+  Object.keys(obj).sort().forEach((key) => {
+    sorted[key] = sortKeys(obj[key]);
+  });
+  return sorted;
+}
+
 function computeHash({ case_id, officer_id, action_type, payload, prev_hash, created_at }) {
+  // Use Unix timestamp string to prevent minor ISO formatting / timezone discrepancies
+  const dateStr = new Date(created_at).getTime().toString();
   const canonical = JSON.stringify({
     case_id,
     officer_id,
     action_type,
-    payload,
+    payload: sortKeys(payload),
     prev_hash,
-    created_at,
+    created_at: dateStr,
   });
   return crypto.createHash("sha256").update(canonical).digest("hex");
 }
