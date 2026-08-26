@@ -1,0 +1,34 @@
+version: "3.9"
+
+# NOTE: This orchestrates the backend and frontend for local development.
+# The database is Supabase (hosted), so it is NOT containerized here —
+# both services connect to it via DATABASE_URL in their .env files.
+# This keeps the hackathon setup simple: `docker-compose up` just needs
+# your Supabase credentials in the .env files below, no local Postgres to manage.
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    depends_on:
+      - backend

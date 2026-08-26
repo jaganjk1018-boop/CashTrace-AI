@@ -1,0 +1,44 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background-color: #0b1120;
+}
+
+/* Leaflet needs an explicit height on its container */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background-color: #0b1120;
+}
+
+/* Stunning Dark Theme filter overlay for OpenStreetMap standard tiles */
+.leaflet-tile-container {
+  filter: invert(90%) hue-rotate(180deg) brightness(88%) contrast(100%) saturate(80%);
+}
+
+.leaflet-bar {
+  border: 1px solid #1e2a45 !important;
+  background-color: #111a2e !important;
+}
+
+.leaflet-bar a {
+  background-color: #111a2e !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #1e2a45 !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #1e2a45 !important;
+  color: #ffffff !important;
+}
+
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #111a2e !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #1e2a45;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}

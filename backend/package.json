@@ -1,0 +1,19 @@
+{
+  "name": "cashtrace-backend",
+  "version": "1.0.0",
+  "description": "CashTrace AI backend — ingestion + prediction API",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "socket.io": "^4.7.5",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
+  }
+}
